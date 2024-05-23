@@ -1,0 +1,10 @@
+/.git
+/.github
+defaults.env
+Dockerfile
+docker-compose.yaml
+node_modules
+npm-debug.log
+.dockerignore
+README.md
+/grafana

@@ -1,0 +1,99 @@
+# AESO Current Supply Demand Dashboard
+
+# Copyright (c) 2024 Maxwell Power
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without
+# restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom
+# the Software is furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE
+# AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+# ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+# File: docker-compose.yaml
+
+services:
+
+# Main API Image
+  api:
+    image: ${API_IMAGE}:${API_IMAGE_TAG}
+    restart: ${RESTART_POLICY}
+    environment:
+      - INFLUXDB_URL=http://influxdb:8086
+      - INFLUXDB_TOKEN=${DOCKER_INFLUXDB_INIT_ADMIN_TOKEN}
+      - INFLUXDB_ORG=${DOCKER_INFLUXDB_INIT_ORG}
+      - INFLUXDB_BUCKET=${DOCKER_INFLUXDB_INIT_BUCKET}
+      - AESO_API_URL
+      - AESO_API_KEY
+      - TZ
+    depends_on:
+      - influxdb
+    networks:
+      - aeso-network
+
+## Influx Database
+  influxdb:
+    image: influxdb:latest
+    restart: ${RESTART_POLICY}
+    volumes:
+      - ${INFLUX_DATA_PATH}:/var/lib/influxdb2
+    environment:
+      - DOCKER_INFLUXDB_INIT_MODE
+      - DOCKER_INFLUXDB_INIT_USERNAME
+      - DOCKER_INFLUXDB_INIT_PASSWORD
+      - DOCKER_INFLUXDB_INIT_ORG
+      - DOCKER_INFLUXDB_INIT_BUCKET
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN
+      - DOCKER_INFLUXDB_INIT_RETENTION=0
+      - TZ
+    networks:
+      - aeso-network
+
+  ## Caddy Proxy
+  caddy:
+    image: caddy:${CADDY_IMAGE_TAG}
+    restart: ${RESTART_POLICY}
+    environment:
+      - TZ
+      - GRAFANA_SITEURL
+      - INFLUX_SITEURL
+      - DOMAIN
+    volumes:
+      - ${CADDY_CONFIG_PATH}/Caddyfile:/etc/caddy/Caddyfile
+      - ${CADDY_DATA_PATH}/data:/data
+      - caddy_tmp:/config
+    ports:
+      - ${PUBLIC_HTTP_PORT}:80/tcp
+      - ${PUBLIC_HTTPS_PORT}:443/tcp
+    networks:
+      - aeso-network
+
+  ## Grafana Dashboarding
+  grafana:
+    image: grafana/grafana:${GRAFANA_IMAGE_TAG}
+    restart: ${RESTART_POLICY}
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning
+    environment:
+      - GF_SECURITY_ADMIN_USER
+      - GF_SECURITY_ADMIN_PASSWORD
+      - DOCKER_INFLUXDB_INIT_ORG
+      - DOCKER_INFLUXDB_INIT_BUCKET
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN
+      - TZ
+    depends_on:
+      - influxdb
+    networks:
+      - aeso-network
+
+volumes:
+  influxdb_data:
+  grafana_data:
+  caddy_tmp:
+
+networks:
+  aeso-network:
+    driver: bridge

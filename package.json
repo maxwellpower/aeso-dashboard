@@ -1,0 +1,17 @@
+{
+  "name": "aeso-dashboard",
+  "version": "1.0.0",
+  "description": "AESO Current Supply Demand Dashboard",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@influxdata/influxdb-client": "^1.33",
+    "axios": "^1.6",
+    "luxon": "^3.4.4",
+    "node-cron": "^3.0"
+  }
+}

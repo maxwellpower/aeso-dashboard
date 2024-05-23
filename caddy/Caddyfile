@@ -1,0 +1,20 @@
+# Global options
+{
+    email hostmaster@{$DOMAIN}
+    local_certs
+}
+
+# Redirect HTTP to HTTPS
+http:// {
+    redir https://{host}{uri}
+}
+
+# Grafana
+{$GRAFANA_SITEURL} {
+    reverse_proxy grafana:3000
+}
+
+# InfluxDB
+{$INFLUX_SITEURL} {
+    reverse_proxy influxdb:8086
+}

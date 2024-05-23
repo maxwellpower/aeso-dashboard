@@ -1,0 +1,13 @@
+apiVersion: 1
+
+providers:
+  - name: 'AESO Current Supply Demand'
+    orgId: 1
+    folder: 'aeso'
+    type: file
+    disableDeletion: true
+    updateIntervalSeconds: 10
+    allowUiUpdates: false
+    options:
+      path: /etc/grafana/provisioning/dashboards/aeso
+      foldersFromFilesStructure: false
